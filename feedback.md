@@ -16,6 +16,8 @@
   helpful if the docs had one canonical, static (non-JS-rendered) page confirming exact deployed
   chains and contract addresses per network, especially during a hackathon where the target
   chain is a hard scoring requirement.
+- *Resolution detail:* We eventually confirmed directly from the `Nox.sol` source code metadata (in `@iexec-nox/nox-protocol-contracts`) that the `NoxCompute` address resolution supports **Hardhat local development chain (31337)**, **Arbitrum Sepolia (421614)**, and **Ethereum Sepolia (11155111)**. Surfacing this list statically in the main setup guides would save builders from having to audit package code internals to confirm chain compatibility.
+
 
 ## Protocol / architecture observations
 - Building "privacy on top of an existing protocol without modifying it" (the hackathon's core
