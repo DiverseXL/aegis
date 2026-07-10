@@ -1,0 +1,5 @@
+node_modules/
+artifacts/
+cache/
+offchain-services.log
+.env
