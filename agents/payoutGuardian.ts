@@ -85,6 +85,11 @@ export class PayoutGuardian {
 
     const { value } = await this.handleClient.decrypt(handle);
     const amount = BigInt(value as string | number | bigint);
+    // maxAmountPerStream === 0n is the sentinel for "no limit stated" —
+    // skip the check rather than flagging every stream as exceeding a zero threshold.
+    if (this.policy.maxAmountPerStream === 0n) {
+      return { flagged: false, amount };
+    }
     return { flagged: amount > this.policy.maxAmountPerStream, amount };
   }
 
