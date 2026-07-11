@@ -29,6 +29,15 @@ touching wallet UX or requiring recipients to do anything differently.
 - **Frontend** *(in progress)* — flight-recorder style dashboard: live stream
   state, agent decisions and reasoning, disclosure event log.
 
+## DAO Governance Compatibility
+Aegis is designed to sit behind a Gnosis Safe (or any multisig) rather than a
+single EOA. `AegisStream`'s `sender` field — set at stream creation — can be a
+Safe's contract address directly; Safe's own multi-signer approval flow governs
+who can trigger `createStream()` or `discloseToAuditor()` calls from it, with no
+additional integration required on Aegis's side. A dedicated Safe module (for
+richer proposal/voting UX around stream creation) is a natural roadmap item but
+out of scope for this submission.
+
 ## Status
 - [x] AegisVault (confidential treasury wrapper)
 - [x] AegisStream (confidential linear vesting)

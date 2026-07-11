@@ -52,6 +52,8 @@ contract AegisStream {
     ) external returns (uint256 streamId) {
         require(duration > 0, "AegisStream: zero duration");
         require(recipient != address(0), "AegisStream: zero recipient");
+        require(address(asset) != address(0), "AegisStream: zero asset");
+        require(recipient != msg.sender, "AegisStream: recipient cannot be sender");
 
         euint256 totalAmount = Nox.fromExternal(encryptedTotalAmount, inputProof);
 
@@ -83,6 +85,7 @@ contract AegisStream {
     /// @notice Computes the currently withdrawable encrypted amount for a stream.
     function withdrawableAmount(uint256 streamId) public returns (euint256) {
         Stream storage s = streams[streamId];
+        require(s.recipient != address(0), "AegisStream: stream does not exist");
 
         uint40 elapsed;
         if (block.timestamp <= s.startTime) {
@@ -109,6 +112,7 @@ contract AegisStream {
     /// @notice Withdraws the currently vested, unwithdrawn amount to the recipient.
     function withdraw(uint256 streamId) external {
         Stream storage s = streams[streamId];
+        require(s.recipient != address(0), "AegisStream: stream does not exist");
         require(msg.sender == s.recipient, "AegisStream: not recipient");
 
         euint256 amount = withdrawableAmount(streamId);
@@ -134,8 +138,10 @@ contract AegisStream {
     ///         past state, not an ongoing view into the live, changing balance.
     function discloseToAuditor(uint256 streamId, address auditor) external returns (euint256 snapshotHandle) {
         Stream storage s = streams[streamId];
+        require(s.sender != address(0), "AegisStream: stream does not exist");
         require(msg.sender == s.sender, "AegisStream: only DAO/sender can disclose");
         require(auditor != address(0), "AegisStream: zero auditor");
+        require(auditor != s.recipient, "AegisStream: auditor cannot be recipient");
 
         // Snapshot: add zero to force a fresh handle rather than reusing the live one.
         // This guarantees the auditor gets a frozen point-in-time view, not a live

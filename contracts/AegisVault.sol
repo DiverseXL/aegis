@@ -18,6 +18,8 @@ contract AegisVault is ERC20ToERC7984Wrapper {
     ///         recipient viewer access so they can actually decrypt their
     ///         own balance via the JS SDK (not automatic per ACL model).
     function wrap(address to, uint256 amount) public override returns (euint256) {
+        require(to != address(0), "AegisVault: zero recipient");
+        require(amount > 0, "AegisVault: zero amount");
         euint256 wrappedAmount = super.wrap(to, amount);
         Nox.addViewer(wrappedAmount, to);
         return wrappedAmount;
