@@ -1,6 +1,9 @@
+import * as dotenv from 'dotenv';
 import hardhatToolboxViemPlugin from '@nomicfoundation/hardhat-toolbox-viem';
 import { defineConfig } from 'hardhat/config';
 import noxPlugin from '@iexec-nox/nox-hardhat-plugin';
+
+dotenv.config();
 
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin, noxPlugin],
@@ -14,6 +17,10 @@ export default defineConfig({
     default: {
       type: 'edr-simulated',
       chainType: 'op',
+    },
+    sepolia: {
+      url: process.env.SEPOLIA_RPC_URL || '',
+      chainId: 11155111,
     },
   },
 });
