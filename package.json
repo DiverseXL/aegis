@@ -13,9 +13,11 @@
   "devDependencies": {
     "@iexec-nox/nox-hardhat-plugin": "^0.1.0",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
+    "@nomicfoundation/hardhat-verify": "^3.0.21",
     "hardhat": "^3.9.1"
   },
   "dependencies": {
-    "@iexec-nox/nox-confidential-contracts": "^0.2.2"
+    "@iexec-nox/nox-confidential-contracts": "^0.2.2",
+    "dotenv": "^16.4.7"
   }
 }

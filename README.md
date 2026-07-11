@@ -32,11 +32,28 @@ touching wallet UX or requiring recipients to do anything differently.
 ## Status
 - [x] AegisVault (confidential treasury wrapper)
 - [x] AegisStream (confidential linear vesting)
-- [ ] Tests passing end-to-end (blocked on local Docker setup for the Nox
-      offchain stack — required for encrypt/decrypt test execution)
-- [ ] Agent layer
+- [x] discloseToAuditor (selective disclosure via frozen snapshots)
+- [x] payoutGuardian.ts (off-chain anomaly watcher)
+- [x] disclosureAgent.ts (off-chain disclosure trigger + audit log)
+- [x] Tests passing end-to-end against real Docker-backed Nox stack
+- [x] Deployed to Ethereum Sepolia
+- [x] Etherscan/Blockscout/Sourcify source verification
+- [ ] Policy-parsing agent
 - [ ] Frontend dashboard
-- [ ] ETH Sepolia deployment (see `feedback.md` re: chain verification)
+
+## Deployed Contracts (Ethereum Sepolia)
+
+All contracts verified on Etherscan, Blockscout, and Sourcify.
+
+| Contract    | Address                                      |
+|-------------|-----------------------------------------------|
+| MockERC20 (Aegis Mock USDC) | [`0x8c54d36d022BA2c9684c2c77e48d3D961B6ef507`](https://sepolia.etherscan.io/address/0x8c54d36d022ba2c9684c2c77e48d3d961b6ef507#code) |
+| AegisVault  | [`0xb9dC5Aebe33f7b1F74971C0F87164eD018f69C66`](https://sepolia.etherscan.io/address/0xb9dc5aebe33f7b1f74971c0f87164ed018f69c66#code) |
+| AegisStream | [`0xd4AC9ef480a60215b0aDe26c85716A0B5A87Ecf1`](https://sepolia.etherscan.io/address/0xd4ac9ef480a60215b0ade26c85716a0b5a87ecf1#code) |
+
+Deployer / initial Payout Guardian: `0x0Ec656e175B83CE60048445E56764b8c03dfce59`
+
+Nox's `NoxCompute` contract on Ethereum Sepolia (used automatically by `Nox.sol`'s chain-aware resolver): `0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF`
 
 ## Setup
 Requirements: Node.js 22+, Docker running locally.

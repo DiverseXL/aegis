@@ -60,4 +60,11 @@
 ### Missing subgraph URL in docs
 - `HandleClientConfig.subgraphUrl` is a required field for `createViemHandleClient`, but the docs site has no reference to it anywhere — not in the JS SDK guide, Getting Started, or Networks page. We had to find the actual subgraph endpoint via general web search (found: "Nox Protocol Indexer - Ethereum Sepolia" on The Graph Explorer, subgraph ID `9CsccKwvgYFo72zZeU4k4wj2NEBLdWhVE3EUandgmzgo`). This should be published directly in the JS SDK reference alongside the other config fields, ideally one official URL per supported network (matching the Networks page's chain list).
 
+## Hardhat 3 verify plugin config format differs from v2 (not Nox-specific, but relevant to anyone using this stack)
+- `@nomicfoundation/hardhat-verify` under Hardhat 3 expects `verify.etherscan.apiKey` using
+  `configVariable()` / the native keystore (`npx hardhat keystore set`), not the old
+  Hardhat 2 `etherscan: { apiKey: {...} }` shape. Easy to get silently wrong since the
+  old format doesn't error clearly — worth a note in Nox's own Hardhat setup guide since
+  Nox users are building on Hardhat 3 by necessity (per the plugin's own prerequisites).
+
 
