@@ -26,6 +26,7 @@ contract AegisStream {
 
     event StreamCreated(uint256 indexed streamId, address indexed sender, address indexed recipient, address asset);
     event StreamWithdrawn(uint256 indexed streamId, address indexed recipient);
+    event DisclosureGranted(uint256 indexed streamId, address indexed auditor, address indexed requestedBy, bytes32 snapshotHandle, uint256 timestamp);
 
     constructor(address _payoutGuardian) {
         require(_payoutGuardian != address(0), "AegisStream: zero payout guardian");
@@ -124,5 +125,25 @@ contract AegisStream {
         Nox.addViewer(transferred, s.recipient); // recipient needs viewer access to decrypt their new balance
 
         emit StreamWithdrawn(streamId, s.recipient);
+    }
+
+    /// @notice Creates an immutable snapshot of a stream's current withdrawn
+    ///         amount and grants an auditor viewer access to that snapshot only.
+    ///         Because Nox ACL grants are permanent (no revoke), this pattern
+    ///         gives time-boxed disclosure semantics: the auditor sees a frozen
+    ///         past state, not an ongoing view into the live, changing balance.
+    function discloseToAuditor(uint256 streamId, address auditor) external returns (euint256 snapshotHandle) {
+        Stream storage s = streams[streamId];
+        require(msg.sender == s.sender, "AegisStream: only DAO/sender can disclose");
+        require(auditor != address(0), "AegisStream: zero auditor");
+
+        // Snapshot: add zero to force a fresh handle rather than reusing the live one.
+        // This guarantees the auditor gets a frozen point-in-time view, not a live
+        // window into the evolving withdrawnAmount handle.
+        snapshotHandle = Nox.add(s.withdrawnAmount, Nox.toEuint256(0));
+        Nox.allowThis(snapshotHandle);
+        Nox.addViewer(snapshotHandle, auditor);
+
+        emit DisclosureGranted(streamId, auditor, msg.sender, euint256.unwrap(snapshotHandle), block.timestamp);
     }
 }
