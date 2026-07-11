@@ -48,7 +48,7 @@ describe('AegisStream', () => {
     // --- Setup: mock treasury token -> AegisVault confidential wrapper ---
     const mockUsdc = await viem.deployContract('MockERC20', ['Mock USDC', 'mUSDC', 1_000_000n]);
     const vault = await viem.deployContract('AegisVault', [mockUsdc.address]);
-    const stream = await viem.deployContract('AegisStream', []);
+    const stream = await viem.deployContract('AegisStream', [sender.account.address]);
 
     // Wrap 1000 units into the confidential vault token, held by sender
     await mockUsdc.write.approve([vault.address, 1000n]);

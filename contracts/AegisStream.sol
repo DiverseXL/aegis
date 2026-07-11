@@ -22,9 +22,22 @@ contract AegisStream {
 
     uint256 public nextStreamId;
     mapping(uint256 => Stream) public streams;
+    address public immutable payoutGuardian;
 
     event StreamCreated(uint256 indexed streamId, address indexed sender, address indexed recipient, address asset);
     event StreamWithdrawn(uint256 indexed streamId, address indexed recipient);
+
+    constructor(address _payoutGuardian) {
+        require(_payoutGuardian != address(0), "AegisStream: zero payout guardian");
+        payoutGuardian = _payoutGuardian;
+    }
+
+    /// @notice Returns the encrypted total amount handle for a stream.
+    ///         Explicit accessor since auto-generated struct getters may not
+    ///         cleanly expose encrypted-type fields — see feedback.md.
+    function getStreamTotalAmount(uint256 streamId) external view returns (euint256) {
+        return streams[streamId].totalAmount;
+    }
 
     /// @notice Creates a linear stream. Caller must have set this contract
     ///         as an operator on `asset` beforehand (per ERC-7984 operator model).
@@ -47,6 +60,7 @@ contract AegisStream {
         // Persist ACL so this contract can use `received` across future transactions
         // (e.g., withdraw). Without this, access is only transient for the current tx.
         Nox.allowThis(received);
+        Nox.addViewer(received, payoutGuardian);
 
         streamId = nextStreamId++;
         euint256 zero = Nox.toEuint256(0);

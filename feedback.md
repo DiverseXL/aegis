@@ -57,3 +57,7 @@
 ### _mint already grants admin access automatically
 - Contrary to what we initially assumed from the ACL overview page, `_mint` (which is called internally by `ERC20ToERC7984Wrapper.wrap()`) already performs both `Nox.allowThis()` (granting admin access to the calling wrapper contract) and `Nox.allow(newBalance, to)` (granting admin and decrypt rights to the recipient) on the new balance handle. This means recipients of minted/wrapped tokens already have decrypt access to their balances out of the box without needing an additional `addViewer()` call. Confirming this behavior in the "Create a Confidential ERC-7984 Token" guide or the ACL overview would have saved us investigation time (which we spent digging into ERC7984Base.sol's internal `_update` logic).
 
+### Missing subgraph URL in docs
+- `HandleClientConfig.subgraphUrl` is a required field for `createViemHandleClient`, but the docs site has no reference to it anywhere — not in the JS SDK guide, Getting Started, or Networks page. We had to find the actual subgraph endpoint via general web search (found: "Nox Protocol Indexer - Ethereum Sepolia" on The Graph Explorer, subgraph ID `9CsccKwvgYFo72zZeU4k4wj2NEBLdWhVE3EUandgmzgo`). This should be published directly in the JS SDK reference alongside the other config fields, ideally one official URL per supported network (matching the Networks page's chain list).
+
+
