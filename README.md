@@ -47,8 +47,26 @@ out of scope for this submission.
 - [x] Tests passing end-to-end against real Docker-backed Nox stack
 - [x] Deployed to Ethereum Sepolia
 - [x] Etherscan/Blockscout/Sourcify source verification
+- [x] Safe-compatible stream creation proven on-chain
 - [ ] Policy-parsing agent
 - [ ] Frontend dashboard
+
+## Live Demo: Confidential Stream Created via Safe Multisig
+
+Aegis's Safe-compatibility claim isn't just architectural — it's been proven on-chain:
+
+- **Safe deployed**: [`0x1c0780faCD4E295439c07FD69104f276de80DFB4`](https://sepolia.etherscan.io/address/0x1c0780facd4e295439c07fd69104f276de80dfb4)
+- **Safe wraps treasury funds**: batched `approve` + `wrap` + `setOperator`, all executed
+  through Safe's own transaction machinery
+  ([tx](https://sepolia.etherscan.io/tx/0x4b177d82952c3c40a7b6a3f42db7ae911a7d127f1e590b9421610eeacf511b31))
+- **Safe creates a confidential payment stream**: `AegisStream.createStream()` called
+  directly by the Safe (not a proxied EOA), with the payment amount encrypted
+  client-side and the Nox proof correctly attributed to the Safe as `owner`
+  ([tx](https://sepolia.etherscan.io/tx/0xab3627e9b56daf8bd283c641be88bd93449af5fca164c046889ff43d813517ea))
+
+This demonstrates the full intended flow: **a DAO's actual multisig treasury**
+creating and holding a confidential payroll stream — not a simplified single-signer
+stand-in.
 
 ## Deployed Contracts (Ethereum Sepolia)
 
