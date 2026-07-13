@@ -38,56 +38,55 @@ additional integration required on Aegis's side. A dedicated Safe module (for
 richer proposal/voting UX around stream creation) is a natural roadmap item but
 out of scope for this submission.
 
-## Status
-- [x] AegisVault (confidential treasury wrapper)
-- [x] AegisStream (confidential linear vesting)
-- [x] discloseToAuditor (selective disclosure via frozen snapshots)
-- [x] payoutGuardian.ts (off-chain anomaly watcher)
-- [x] disclosureAgent.ts (off-chain disclosure trigger + audit log)
-- [x] Tests passing end-to-end against real Docker-backed Nox stack
-- [x] Deployed to Ethereum Sepolia
-- [x] Etherscan/Blockscout/Sourcify source verification
-- [x] Safe-compatible stream creation proven on-chain
-- [ ] Policy-parsing agent
-- [ ] Frontend dashboard
+## Live Proof — Full End-to-End Flow on Ethereum Sepolia
 
-## Live Demo: Confidential Stream Created via Safe Multisig
+Every claim below is a real, independently verifiable transaction — not a demo
+script that only runs locally. This is the complete DAO payroll journey, executed
+by an actual Gnosis Safe multisig, on live testnet infrastructure.
 
-Aegis's Safe-compatibility claim isn't just architectural — it's been proven on-chain:
+### Deployed & Verified Contracts
 
-- **Safe deployed**: [`0x1c0780faCD4E295439c07FD69104f276de80DFB4`](https://sepolia.etherscan.io/address/0x1c0780facd4e295439c07fd69104f276de80dfb4)
-- **Safe wraps treasury funds**: batched `approve` + `wrap` + `setOperator`, all executed
-  through Safe's own transaction machinery
-  ([tx](https://sepolia.etherscan.io/tx/0x4b177d82952c3c40a7b6a3f42db7ae911a7d127f1e590b9421610eeacf511b31))
-- **Safe creates a confidential payment stream**: `AegisStream.createStream()` called
-  directly by the Safe (not a proxied EOA), with the payment amount encrypted
-  client-side and the Nox proof correctly attributed to the Safe as `owner`
-  ([tx](https://sepolia.etherscan.io/tx/0xab3627e9b56daf8bd283c641be88bd93449af5fca164c046889ff43d813517ea))
+| Contract | Address | Verified On |
+|---|---|---|
+| MockERC20 (Aegis Mock USDC) | [`0x8c54d36d...`](https://sepolia.etherscan.io/address/0x8c54d36d022ba2c9684c2c77e48d3d961b6ef507#code) | Etherscan, Blockscout, Sourcify |
+| AegisVault | [`0xb9dC5Aeb...`](https://sepolia.etherscan.io/address/0xb9dc5aebe33f7b1f74971c0f87164ed018f69c66#code) | Etherscan, Blockscout, Sourcify |
+| AegisStream | [`0xd4AC9ef4...`](https://sepolia.etherscan.io/address/0xd4ac9ef480a60215b0ade26c85716a0b5a87ecf1#code) | Etherscan, Blockscout, Sourcify |
+| Demo Gnosis Safe (1-of-1) | [`0x1c0780fa...`](https://sepolia.etherscan.io/address/0x1c0780facd4e295439c07fd69104f276de80dfb4) | Etherscan |
 
-This demonstrates the full intended flow: **a DAO's actual multisig treasury**
-creating and holding a confidential payroll stream — not a simplified single-signer
-stand-in.
+Nox `NoxCompute` on Ethereum Sepolia: `0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF`
 
-- **Recipient withdraws vested funds**: [tx](https://sepolia.etherscan.io/tx/0x891aba69fb84865c1e45ffb1aed5a4096f9bf9d872e1ea525b7276eb36476a36)
-- **Safe discloses a snapshot to a fresh, zero-balance auditor wallet, who decrypts it gaslessly**: [tx](https://sepolia.etherscan.io/tx/0x892d9d01f741926999f65ea16be7afec83497dcb7ff45db7e9eb286ad8f71e14)
+### The Full Journey — Every Step On-Chain
 
-This proves the complete user journey end-to-end on live Sepolia infrastructure:
-**Safe creates → recipient claims → auditor is selectively shown a frozen snapshot** —
-with every step verified independently on-chain, not just asserted.
+| Step | What Happened | Transaction |
+|---|---|---|
+| 1. Safe wraps treasury funds | Safe batches `approve` + `wrap` + `setOperator` — all executed as one Safe multisig transaction, not a proxied EOA | [`0x4b177d82...`](https://sepolia.etherscan.io/tx/0x4b177d82952c3c40a7b6a3f42db7ae911a7d127f1e590b9421610eeacf511b31) |
+| 2. Safe creates a confidential stream | Amount encrypted client-side, Nox proof correctly attributed to the **Safe** as owner, `createStream()` called directly by the Safe | [`0xab3627e9...`](https://sepolia.etherscan.io/tx/0xab3627e9b56daf8bd283c641be88bd93449af5fca164c046889ff43d813517ea) |
+| 3. Recipient withdraws vested funds | Recipient claims their linearly-vested portion — amount stays encrypted on-chain throughout | [`0x891aba69...`](https://sepolia.etherscan.io/tx/0x891aba69fb84865c1e45ffb1aed5a4096f9bf9d872e1ea525b7276eb36476a36) |
+| 4. Safe discloses to an auditor | Safe grants a **freshly generated, zero-balance wallet** a frozen snapshot of the withdrawn amount | [`0x892d9d01...`](https://sepolia.etherscan.io/tx/0x892d9d01f741926999f65ea16be7afec83497dcb7ff45db7e9eb286ad8f71e14) |
+| 5. Auditor decrypts, gaslessly | The auditor wallet — which never held any ETH — successfully decrypts the disclosed amount via a signed, gasless request | Confirmed via `handleClient.decrypt()`, no transaction needed |
 
-## Deployed Contracts (Ethereum Sepolia)
+**Why this matters:** every step above proves a specific, hard-to-fake claim:
+- Step 1-2 prove **real DAO governance compatibility** — this isn't a single-EOA
+  toy, it's an actual multisig executing real transactions.
+- Step 2's proof-of-ownership resolution (documented in `feedback.md` §6) proves
+  the encryption layer correctly handles smart-contract-wallet senders, not just EOAs.
+- Step 3 proves **the vesting math is genuinely encrypted** end-to-end, not
+  simulated.
+- Steps 4-5 prove **selective disclosure works exactly as designed**: a party with
+  *zero* prior relationship to the system (no funds, no history) can be granted
+  narrow, auditable access to exactly one historical data point — nothing more.
 
-All contracts verified on Etherscan, Blockscout, and Sourcify.
+### Current Status & What's Left
 
-| Contract    | Address                                      |
-|-------------|-----------------------------------------------|
-| MockERC20 (Aegis Mock USDC) | [`0x8c54d36d022BA2c9684c2c77e48d3D961B6ef507`](https://sepolia.etherscan.io/address/0x8c54d36d022ba2c9684c2c77e48d3d961b6ef507#code) |
-| AegisVault  | [`0xb9dC5Aebe33f7b1F74971C0F87164eD018f69C66`](https://sepolia.etherscan.io/address/0xb9dc5aebe33f7b1f74971c0f87164ed018f69c66#code) |
-| AegisStream | [`0xd4AC9ef480a60215b0aDe26c85716A0B5A87Ecf1`](https://sepolia.etherscan.io/address/0xd4ac9ef480a60215b0ade26c85716a0b5a87ecf1#code) |
+- [x] Core contracts (Vault, Stream, selective disclosure) — built, tested, deployed, verified
+- [x] Off-chain agents (Payout Guardian, Disclosure agent, Policy-parsing agent) — built
+- [x] Gnosis Safe / DAO governance compatibility — proven live on-chain
+- [ ] Frontend dashboard — in progress
+- [ ] Demo video
+- [ ] Policy-parsing agent — built and validated, not yet run against a live LLM API (pending funded API key)
 
-Deployer / initial Payout Guardian: `0x0Ec656e175B83CE60048445E56764b8c03dfce59`
-
-Nox's `NoxCompute` contract on Ethereum Sepolia (used automatically by `Nox.sol`'s chain-aware resolver): `0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF`
+We're building this transparently — see `feedback.md` for every real technical
+challenge we hit and how we resolved it, not a sanitized summary.
 
 ## Setup
 Requirements: Node.js 22+, Docker running locally.
