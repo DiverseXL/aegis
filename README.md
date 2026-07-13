@@ -68,6 +68,13 @@ This demonstrates the full intended flow: **a DAO's actual multisig treasury**
 creating and holding a confidential payroll stream — not a simplified single-signer
 stand-in.
 
+- **Recipient withdraws vested funds**: [tx](https://sepolia.etherscan.io/tx/0x891aba69fb84865c1e45ffb1aed5a4096f9bf9d872e1ea525b7276eb36476a36)
+- **Safe discloses a snapshot to a fresh, zero-balance auditor wallet, who decrypts it gaslessly**: [tx](https://sepolia.etherscan.io/tx/0x892d9d01f741926999f65ea16be7afec83497dcb7ff45db7e9eb286ad8f71e14)
+
+This proves the complete user journey end-to-end on live Sepolia infrastructure:
+**Safe creates → recipient claims → auditor is selectively shown a frozen snapshot** —
+with every step verified independently on-chain, not just asserted.
+
 ## Deployed Contracts (Ethereum Sepolia)
 
 All contracts verified on Etherscan, Blockscout, and Sourcify.
