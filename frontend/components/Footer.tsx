@@ -13,7 +13,7 @@ export default function Footer() {
         </div>
         <div className="flex gap-6 text-sm">
           <a
-            href="https://github.com/aegis-confidential/aegis"
+            href="https://github.com/DiverseXL/aegis"
             target="_blank"
             rel="noopener noreferrer"
             className="text-ink/60 hover:text-forest transition"
@@ -29,7 +29,7 @@ export default function Footer() {
             Etherscan (Vault)
           </a>
           <a
-            href="https://github.com/aegis-confidential/aegis/blob/main/aegis/aegis/feedback.md"
+            href="https://github.com/DiverseXL/aegis/blob/main/feedback.md"
             target="_blank"
             rel="noopener noreferrer"
             className="text-ink/60 hover:text-forest transition"

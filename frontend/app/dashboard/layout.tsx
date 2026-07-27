@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { HandleGlyph } from '@/components/HandleGlyph';
 import { useWallet } from '@/lib/useWallet';
 
@@ -9,10 +10,12 @@ const navItems = [
   { label: 'Wrap', href: '/dashboard/wrap' },
   { label: 'Streams', href: '/dashboard/streams' },
   { label: 'Disclosures', href: '/dashboard/disclosures' },
+  { label: 'Settings', href: '/dashboard/settings' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { address, connecting, connect } = useWallet();
+  const pathname = usePathname();
 
   return (
     <div className="min-h-screen bg-base flex">
@@ -27,15 +30,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           Treasury
         </span>
         <nav className="flex flex-col gap-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-xl px-3 py-2 text-sm text-ink/60 hover:text-ink hover:bg-ink/5 transition"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`rounded-xl px-3 py-2 text-sm transition ${
+                  isActive
+                    ? 'bg-forest/10 text-forest font-medium'
+                    : 'text-ink/60 hover:text-ink hover:bg-ink/5'
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="mt-auto pt-6 border-t border-ink/10">

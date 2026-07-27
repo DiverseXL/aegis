@@ -39,7 +39,7 @@ export default function FinalCta() {
             Launch App
           </a>
           <a
-            href="https://github.com/aegis-confidential/aegis"
+            href="https://github.com/DiverseXL/aegis"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto text-center rounded-full border border-ink/20 px-8 py-4 text-base font-medium text-ink hover:bg-ink/10 transition duration-200"

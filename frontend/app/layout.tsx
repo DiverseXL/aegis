@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Fraunces, Inter, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
+import { WalletProvider } from '@/lib/useWallet';
 
 const fraunces = Fraunces({ 
   subsets: ['latin'], 
@@ -26,8 +27,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${mono.variable}`}>
-      <body className="bg-base text-ink font-sans min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${mono.variable}`} suppressHydrationWarning>
+      <body className="bg-base text-ink font-sans min-h-full flex flex-col">
+        <WalletProvider>
+          {children}
+        </WalletProvider>
+      </body>
     </html>
   );
 }

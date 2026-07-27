@@ -241,7 +241,7 @@ export default function NoxTechnicalSection() {
           className="flex justify-center"
         >
           <a
-            href="https://github.com/aegis-confidential/aegis/blob/main/aegis/aegis/feedback.md"
+            href="https://github.com/DiverseXL/aegis/blob/main/feedback.md"
             target="_blank"
             rel="noopener noreferrer"
             className="font-sans text-sm text-forest hover:text-forest/80 transition-colors flex items-center gap-1 group"

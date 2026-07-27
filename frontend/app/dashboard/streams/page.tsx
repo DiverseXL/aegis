@@ -142,7 +142,7 @@ export default function StreamsPage() {
 
           <div className="grid gap-5 mb-6">
             <div>
-              <label className="block text-sm text-ink/70 mb-2">Who is getting paid?</label>
+              <label className="block text-sm text-ink/70 mb-2">Who's getting paid?</label>
               <input
                 type="text"
                 placeholder="0x..."
@@ -222,7 +222,7 @@ export default function StreamsPage() {
                         {s.recipient.slice(0, 6)}...{s.recipient.slice(-4)}
                       </p>
                       <p className="text-xs text-ink/40 font-mono mt-0.5">
-                        Amount: [Hidden] private · <span className={status.color}>{status.label}</span>
+                        Amount: [Private] · <span className={status.color}>{status.label}</span>
                       </p>
                     </div>
                   </div>
