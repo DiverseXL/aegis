@@ -52,7 +52,7 @@ export default function DisclosuresPage() {
             { name: 'timestamp', type: 'uint256', indexed: false },
           ],
         }],
-        fromBlock: 0n,
+        fromBlock: 11251696n,
       });
       
       const mapped = logs.map((l) => l.args as unknown as DisclosureRecord);

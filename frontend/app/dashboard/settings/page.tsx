@@ -101,24 +101,32 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={switchWallet}
-                className="rounded-full border border-forest/30 hover:bg-forest/10 px-5 py-2.5 text-xs font-medium text-forest transition cursor-pointer"
-              >
-                Switch Wallet
-              </button>
-              <button
-                onClick={disconnect}
-                className="rounded-full border border-brick/30 hover:bg-brick/10 px-5 py-2.5 text-xs font-medium text-brick transition cursor-pointer"
-              >
-                Disconnect
-              </button>
-            </div>
+            <div className="space-y-4 pt-2 border-t border-ink/5">
+              <div className="space-y-2">
+                <p className="text-xs text-ink/60 leading-relaxed font-mono">
+                  To use a different wallet, switch accounts directly in your MetaMask
+                  extension, then refresh this page.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="rounded-full border border-ink/10 px-4 py-2 text-xs text-ink/60 hover:text-ink transition cursor-pointer"
+                >
+                  Refresh after switching
+                </button>
+              </div>
 
-            <p className="text-xs text-ink/30 mt-2 font-mono">
-              Disconnect clears your session in Aegis. Your wallet extension may still show as connected until you disconnect it there too.
-            </p>
+              <div className="pt-2">
+                <button
+                  onClick={disconnect}
+                  className="rounded-full border border-brick/30 hover:bg-brick/10 px-5 py-2.5 text-xs font-medium text-brick transition cursor-pointer"
+                >
+                  Disconnect
+                </button>
+                <p className="text-xs text-ink/30 mt-2 font-mono">
+                  Disconnect clears your session in Aegis. Your wallet extension may still show as connected until you disconnect it there too.
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>

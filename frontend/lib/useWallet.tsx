@@ -110,7 +110,7 @@ export function useWallet() {
 }
 
 export function getPublicClient() {
-  return createPublicClient({ chain: sepolia, transport: http() });
+  return createPublicClient({ chain: sepolia, transport: http('https://ethereum-sepolia-rpc.publicnode.com') });
 }
 
 export function getWalletClient() {
