@@ -3,27 +3,28 @@
 import { useState, useEffect } from 'react';
 import { useWallet, getPublicClient } from '@/lib/useWallet';
 import { CONTRACTS, STREAM_ABI } from '@/lib/contracts';
-import { formatEther } from 'viem';
+import { formatEther, parseAbiItem } from 'viem';
 import { HandleGlyph } from '@/components/HandleGlyph';
 
 export default function DashboardOverview() {
   const { address } = useWallet();
   const [ethBalance, setEthBalance] = useState<string | null>(null);
   const [streamsCount, setStreamsCount] = useState<string | null>(null);
+  const [disclosureCount, setDisclosureCount] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!address) {
-      setEthBalance(null);
-      return;
-    }
     const publicClient = getPublicClient();
-    
-    // Fetch ETH Balance
-    publicClient.getBalance({ address })
-      .then((wei) => {
-        setEthBalance(Number(formatEther(wei)).toFixed(4));
+
+    // Fetch total disclosures count from on-chain event logs (using deployment block to optimize search)
+    publicClient.getLogs({
+      address: CONTRACTS.stream as `0x${string}`,
+      event: parseAbiItem('event DisclosureGranted(uint256 indexed streamId, address indexed auditor, address indexed requestedBy, bytes32 snapshotHandle, uint256 timestamp)'),
+      fromBlock: 11251696n,
+    })
+      .then((logs) => {
+        setDisclosureCount(logs.length.toString());
       })
-      .catch((err) => console.error('Failed to fetch balance:', err));
+      .catch((err) => console.error('Failed to fetch logs:', err));
 
     // Fetch total streams count from smart contract
     publicClient.readContract({
@@ -35,12 +36,24 @@ export default function DashboardOverview() {
         setStreamsCount(count.toString());
       })
       .catch((err) => console.error('Failed to fetch nextStreamId:', err));
+
+    if (!address) {
+      setEthBalance(null);
+      return;
+    }
+    
+    // Fetch ETH Balance
+    publicClient.getBalance({ address })
+      .then((wei) => {
+        setEthBalance(Number(formatEther(wei)).toFixed(4));
+      })
+      .catch((err) => console.error('Failed to fetch balance:', err));
   }, [address]);
 
   const stats = [
     { label: 'Streams Created', value: streamsCount ?? '0', highlight: false },
     { label: 'Total Wrapped', value: 'Locked', highlight: false },
-    { label: 'Active Disclosures', value: '1', highlight: true },
+    { label: 'Active Disclosures', value: disclosureCount ?? '0', highlight: true },
     { label: 'Wallet Balance', value: address ? (ethBalance ? `${ethBalance} ETH` : 'Loading...') : 'Connect Wallet', highlight: false },
   ];
 
