@@ -1,8 +1,49 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useWallet, getPublicClient } from '@/lib/useWallet';
+import { CONTRACTS, STREAM_ABI } from '@/lib/contracts';
+import { formatEther } from 'viem';
 import { HandleGlyph } from '@/components/HandleGlyph';
 
 export default function DashboardOverview() {
+  const { address } = useWallet();
+  const [ethBalance, setEthBalance] = useState<string | null>(null);
+  const [streamsCount, setStreamsCount] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!address) {
+      setEthBalance(null);
+      return;
+    }
+    const publicClient = getPublicClient();
+    
+    // Fetch ETH Balance
+    publicClient.getBalance({ address })
+      .then((wei) => {
+        setEthBalance(Number(formatEther(wei)).toFixed(4));
+      })
+      .catch((err) => console.error('Failed to fetch balance:', err));
+
+    // Fetch total streams count from smart contract
+    publicClient.readContract({
+      address: CONTRACTS.stream as `0x${string}`,
+      abi: STREAM_ABI,
+      functionName: 'nextStreamId',
+    })
+      .then((count) => {
+        setStreamsCount(count.toString());
+      })
+      .catch((err) => console.error('Failed to fetch nextStreamId:', err));
+  }, [address]);
+
+  const stats = [
+    { label: 'Streams Created', value: streamsCount ?? '0', highlight: false },
+    { label: 'Total Wrapped', value: 'Locked', highlight: false },
+    { label: 'Active Disclosures', value: '1', highlight: true },
+    { label: 'Wallet Balance', value: address ? (ethBalance ? `${ethBalance} ETH` : 'Loading...') : 'Connect Wallet', highlight: false },
+  ];
+
   return (
     <div className="p-10">
       {/* Top bar */}
@@ -31,12 +72,7 @@ export default function DashboardOverview() {
 
       {/* Stat row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'Streams Created', value: '1', highlight: false },
-          { label: 'Total Wrapped', value: 'Locked', highlight: false },
-          { label: 'Active Disclosures', value: '1', highlight: true },
-          { label: 'Wallet Balance', value: '0.03 ETH', highlight: false },
-        ].map((stat) => (
+        {stats.map((stat) => (
           <div
             key={stat.label}
             className={`rounded-2xl border p-5 ${
