@@ -14,6 +14,28 @@ interface DisclosureRecord {
   timestamp: bigint;
 }
 
+async function fetchContractEventsInChunks(
+  publicClient: any,
+  params: any,
+  fromBlock: bigint,
+  toBlock: bigint,
+  chunkSize = 900n
+) {
+  const allLogs: any[] = [];
+  let start = fromBlock;
+  while (start <= toBlock) {
+    const end = start + chunkSize > toBlock ? toBlock : start + chunkSize;
+    const logs = await publicClient.getContractEvents({
+      ...params,
+      fromBlock: start,
+      toBlock: end,
+    });
+    allLogs.push(...logs);
+    start = end + 1n;
+  }
+  return allLogs;
+}
+
 export default function DisclosuresPage() {
   const { address, connect, connecting } = useWallet();
   const [myStreams, setMyStreams] = useState<StreamSummary[]>([]);
@@ -39,21 +61,26 @@ export default function DisclosuresPage() {
     setLoadingHistory(true);
     try {
       const publicClient = getPublicClient();
-      const logs = await publicClient.getContractEvents({
-        address: CONTRACTS.stream as `0x${string}`,
-        abi: [{
-          type: 'event',
-          name: 'DisclosureGranted',
-          inputs: [
-            { name: 'streamId', type: 'uint256', indexed: true },
-            { name: 'auditor', type: 'address', indexed: true },
-            { name: 'requestedBy', type: 'address', indexed: true },
-            { name: 'snapshotHandle', type: 'bytes32', indexed: false },
-            { name: 'timestamp', type: 'uint256', indexed: false },
-          ],
-        }],
-        fromBlock: 11251696n,
-      });
+      const currentBlock = await publicClient.getBlockNumber();
+      const logs = await fetchContractEventsInChunks(
+        publicClient,
+        {
+          address: CONTRACTS.stream as `0x${string}`,
+          abi: [{
+            type: 'event',
+            name: 'DisclosureGranted',
+            inputs: [
+              { name: 'streamId', type: 'uint256', indexed: true },
+              { name: 'auditor', type: 'address', indexed: true },
+              { name: 'requestedBy', type: 'address', indexed: true },
+              { name: 'snapshotHandle', type: 'bytes32', indexed: false },
+              { name: 'timestamp', type: 'uint256', indexed: false },
+            ],
+          }],
+        },
+        11251696n,
+        currentBlock
+      );
       
       const mapped = logs.map((l) => l.args as unknown as DisclosureRecord);
       setHistory(mapped.reverse());

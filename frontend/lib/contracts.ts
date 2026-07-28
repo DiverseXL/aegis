@@ -22,6 +22,9 @@ export const VAULT_ABI = [
   { type: 'function', name: 'setOperator', stateMutability: 'nonpayable',
     inputs: [{ name: 'spender', type: 'address' }, { name: 'until', type: 'uint48' }],
     outputs: [] },
+  { type: 'function', name: 'isOperator', stateMutability: 'view',
+    inputs: [{ name: 'holder', type: 'address' }, { name: 'spender', type: 'address' }],
+    outputs: [{ type: 'bool' }] },
   { type: 'function', name: 'confidentialBalanceOf', stateMutability: 'view',
     inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'bytes32' }] },
 ] as const;

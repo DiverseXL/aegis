@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useWallet, getWalletClient, getPublicClient } from '@/lib/useWallet';
-import { CONTRACTS, STREAM_ABI } from '@/lib/contracts';
+import { CONTRACTS, STREAM_ABI, VAULT_ABI } from '@/lib/contracts';
 import { fetchAllStreams, type StreamSummary } from '@/lib/streams';
 import { parseUnits } from 'viem';
 import { createViemHandleClient } from '@iexec-nox/handle';
@@ -20,6 +20,48 @@ export default function StreamsPage() {
   const [creating, setCreating] = useState(false);
   const [createStep, setCreateStep] = useState<'idle' | 'encrypting' | 'submitting' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [authorizing, setAuthorizing] = useState(false);
+
+  const checkAuthorization = useCallback(async () => {
+    if (!address) return;
+    const publicClient = getPublicClient();
+    const isOperator = await publicClient.readContract({
+      address: CONTRACTS.vault as `0x${string}`,
+      abi: VAULT_ABI,
+      functionName: 'isOperator',
+      args: [address, CONTRACTS.stream as `0x${string}`],
+    });
+    setIsAuthorized(isOperator as boolean);
+  }, [address]);
+
+  useEffect(() => {
+    checkAuthorization();
+  }, [checkAuthorization]);
+
+  async function handleAuthorize() {
+    if (!address) return;
+    setAuthorizing(true);
+    try {
+      const walletClient = getWalletClient();
+      const publicClient = getPublicClient();
+      const untilTimestamp = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60;
+      const tx = await walletClient.writeContract({
+        account: address,
+        address: CONTRACTS.vault as `0x${string}`,
+        abi: VAULT_ABI,
+        functionName: 'setOperator',
+        args: [CONTRACTS.stream as `0x${string}`, untilTimestamp],
+      });
+      await publicClient.waitForTransactionReceipt({ hash: tx });
+      setIsAuthorized(true);
+    } catch (err: any) {
+      setErrorMsg(err?.shortMessage ?? 'Authorization failed.');
+    } finally {
+      setAuthorizing(false);
+    }
+  }
 
   const loadStreams = useCallback(async () => {
     setLoading(true);
@@ -137,62 +179,84 @@ export default function StreamsPage() {
           {connecting ? 'Connecting...' : 'Connect your wallet to create a stream'}
         </button>
       ) : (
-        <div className="rounded-2xl border border-ink/10 p-8 mb-12">
-          <h2 className="text-ink font-medium mb-6">Start a new payment</h2>
-
-          <div className="grid gap-5 mb-6">
-            <div>
-              <label className="block text-sm text-ink/70 mb-2">Who's getting paid?</label>
-              <input
-                type="text"
-                placeholder="0x..."
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                className="w-full rounded-xl bg-ink/5 border border-ink/10 px-4 py-3 text-ink font-mono text-sm focus:outline-none focus:border-forest/50"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-ink/70 mb-2">How much (private)?</label>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full rounded-xl bg-ink/5 border border-ink/10 px-4 py-3 text-ink font-mono text-sm focus:outline-none focus:border-forest/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-ink/70 mb-2">Over how many days?</label>
-                <input
-                  type="number"
-                  value={days}
-                  onChange={(e) => setDays(e.target.value)}
-                  className="w-full rounded-xl bg-ink/5 border border-ink/10 px-4 py-3 text-ink font-mono text-sm focus:outline-none focus:border-forest/50"
-                />
-              </div>
-            </div>
-          </div>
-
-          {errorMsg && (
-            <div className="rounded-xl border border-brick/30 bg-brick/[0.08] px-4 py-3 mb-4 text-sm text-brick">
-              {errorMsg}
+        <>
+          {isAuthorized === false && (
+            <div className="rounded-2xl border border-gold/30 bg-gold/[0.06] p-6 mb-8">
+              <p className="text-sm text-ink/80 mb-4">
+                <strong className="text-gold">One-time setup:</strong> before creating your
+                first stream, you need to authorize AegisStream to move funds from your
+                private balance. This is a standard one-time permission, similar to the
+                approval step when wrapping.
+              </p>
+              <button
+                onClick={handleAuthorize}
+                disabled={authorizing}
+                className="rounded-full bg-gold px-6 py-2.5 text-sm font-medium text-base hover:bg-gold/80 transition disabled:opacity-60 cursor-pointer"
+              >
+                {authorizing ? 'Authorizing...' : 'Authorize AegisStream'}
+              </button>
             </div>
           )}
 
-          <button
-            onClick={handleCreate}
-            disabled={creating}
-            className="w-full rounded-full bg-forest px-6 py-3.5 text-sm font-medium text-ink hover:bg-forest/80 transition disabled:opacity-60 cursor-pointer"
-          >
-            {createStep === 'encrypting' && 'Encrypting the amount privately...'}
-            {createStep === 'submitting' && 'Creating the stream on-chain...'}
-            {(createStep === 'idle' || createStep === 'error' || createStep === 'done') && 'Create private payment'}
-          </button>
-          <p className="text-xs text-ink/30 text-center mt-3">
-            The amount is encrypted on your device before it ever reaches the
-            blockchain - nobody else ever sees the real number.
-          </p>
-        </div>
+          {isAuthorized === true && (
+            <div className="rounded-2xl border border-ink/10 p-8 mb-12">
+              <h2 className="text-ink font-medium mb-6">Start a new payment</h2>
+
+              <div className="grid gap-5 mb-6">
+                <div>
+                  <label className="block text-sm text-ink/70 mb-2">Who's getting paid?</label>
+                  <input
+                    type="text"
+                    placeholder="0x..."
+                    value={recipient}
+                    onChange={(e) => setRecipient(e.target.value)}
+                    className="w-full rounded-xl bg-ink/5 border border-ink/10 px-4 py-3 text-ink font-mono text-sm focus:outline-none focus:border-forest/50"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-ink/70 mb-2">How much (private)?</label>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="w-full rounded-xl bg-ink/5 border border-ink/10 px-4 py-3 text-ink font-mono text-sm focus:outline-none focus:border-forest/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-ink/70 mb-2">Over how many days?</label>
+                    <input
+                      type="number"
+                      value={days}
+                      onChange={(e) => setDays(e.target.value)}
+                      className="w-full rounded-xl bg-ink/5 border border-ink/10 px-4 py-3 text-ink font-mono text-sm focus:outline-none focus:border-forest/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {errorMsg && (
+                <div className="rounded-xl border border-brick/30 bg-brick/[0.08] px-4 py-3 mb-4 text-sm text-brick">
+                  {errorMsg}
+                </div>
+              )}
+
+              <button
+                onClick={handleCreate}
+                disabled={creating}
+                className="w-full rounded-full bg-forest px-6 py-3.5 text-sm font-medium text-ink hover:bg-forest/80 transition disabled:opacity-60 cursor-pointer"
+              >
+                {createStep === 'encrypting' && 'Encrypting the amount privately...'}
+                {createStep === 'submitting' && 'Creating the stream on-chain...'}
+                {(createStep === 'idle' || createStep === 'error' || createStep === 'done') && 'Create private payment'}
+              </button>
+              <p className="text-xs text-ink/30 text-center mt-3">
+                The amount is encrypted on your device before it ever reaches the
+                blockchain - nobody else ever sees the real number.
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Stream list - public activity feed */}
