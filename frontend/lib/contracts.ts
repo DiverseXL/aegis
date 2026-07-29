@@ -18,7 +18,7 @@ export const MOCK_ERC20_ABI = [
 export const VAULT_ABI = [
   { type: 'function', name: 'wrap', stateMutability: 'nonpayable',
     inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }],
-    outputs: [{ type: '', type: 'bytes32' }] },
+    outputs: [{ type: 'bytes32' }] },
   { type: 'function', name: 'setOperator', stateMutability: 'nonpayable',
     inputs: [{ name: 'spender', type: 'address' }, { name: 'until', type: 'uint48' }],
     outputs: [] },

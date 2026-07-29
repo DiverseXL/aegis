@@ -13,7 +13,7 @@ export default function NoxTechnicalSection() {
     type: 'spring',
     stiffness: 300,
     damping: 20,
-  };
+  } as const;
 
   return (
     <section
