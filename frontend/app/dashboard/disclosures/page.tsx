@@ -5,6 +5,8 @@ import { useWallet, getWalletClient, getPublicClient } from '@/lib/useWallet';
 import { CONTRACTS, STREAM_ABI } from '@/lib/contracts';
 import { fetchAllStreams, type StreamSummary } from '@/lib/streams';
 import { HandleGlyph } from '@/components/HandleGlyph';
+import { createViemHandleClient } from '@iexec-nox/handle';
+import { formatUnits } from 'viem';
 
 interface DisclosureRecord {
   streamId: bigint;
@@ -46,6 +48,31 @@ export default function DisclosuresPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [history, setHistory] = useState<DisclosureRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [decryptedValues, setDecryptedValues] = useState<Record<string, string>>({});
+  const [decrypting, setDecrypting] = useState<string | null>(null);
+
+  // filter history to disclosures made TO the connected wallet
+  const myDisclosures = history.filter(
+    (d) => address && d.auditor.toLowerCase() === address.toLowerCase()
+  );
+
+  async function handleDecrypt(snapshotHandle: `0x${string}`, key: string) {
+    if (!address) return;
+    setErrorMsg(null);
+    setDecrypting(key);
+    try {
+      const walletClient = getWalletClient();
+      const handleClient = await createViemHandleClient(walletClient);
+      const { value } = await handleClient.decrypt(snapshotHandle);
+      const formatted = formatUnits(BigInt(value.toString()), 18);
+      setDecryptedValues((prev) => ({ ...prev, [key]: formatted }));
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err?.shortMessage ?? err?.message ?? 'Decryption failed — you may not have access to this value.');
+    } finally {
+      setDecrypting(null);
+    }
+  }
 
   const loadMyStreams = useCallback(async () => {
     if (!address) return;
@@ -218,6 +245,43 @@ export default function DisclosuresPage() {
               {disclosureStep === 'submitting' ? 'Granting disclosure...' : 'Show this payment to the auditor'}
             </button>
           )}
+        </div>
+      )}
+
+      {myDisclosures.length > 0 && (
+        <div className="rounded-2xl border border-gold/30 bg-gold/[0.05] overflow-hidden mb-12">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gold/20">
+            <span className="text-gold font-medium">Disclosed to you</span>
+            <span className="font-mono text-xs text-ink/30">Only you can decrypt these</span>
+          </div>
+          <div className="divide-y divide-ink/5">
+            {myDisclosures.map((d, i) => {
+              const key = `${d.streamId}-${i}`;
+              return (
+                <div key={key} className="px-6 py-5 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-ink/80">Stream #{d.streamId.toString()}</p>
+                    <p className="text-xs text-ink/30 mt-0.5">
+                      Disclosed by {d.requestedBy.slice(0, 6)}...{d.requestedBy.slice(-4)}
+                    </p>
+                  </div>
+                  {decryptedValues[key] ? (
+                    <span className="font-mono text-lg text-gold font-semibold">
+                      {decryptedValues[key]} <span className="text-xs text-ink/40">mUSDC</span>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleDecrypt(d.snapshotHandle, key)}
+                      disabled={decrypting === key}
+                      className="rounded-full bg-gold/90 px-5 py-2 text-xs font-medium text-base hover:bg-gold transition disabled:opacity-60 cursor-pointer"
+                    >
+                      {decrypting === key ? 'Decrypting...' : 'Decrypt this value'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

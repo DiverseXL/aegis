@@ -6,6 +6,28 @@ import { CONTRACTS, STREAM_ABI } from '@/lib/contracts';
 import { formatEther, parseAbiItem } from 'viem';
 import { HandleGlyph } from '@/components/HandleGlyph';
 
+async function fetchContractLogsInChunks(
+  publicClient: any,
+  params: any,
+  fromBlock: bigint,
+  toBlock: bigint,
+  chunkSize = 900n
+) {
+  const allLogs: any[] = [];
+  let start = fromBlock;
+  while (start <= toBlock) {
+    const end = start + chunkSize > toBlock ? toBlock : start + chunkSize;
+    const logs = await publicClient.getLogs({
+      ...params,
+      fromBlock: start,
+      toBlock: end,
+    });
+    allLogs.push(...logs);
+    start = end + 1n;
+  }
+  return allLogs;
+}
+
 export default function DashboardOverview() {
   const { address } = useWallet();
   const [ethBalance, setEthBalance] = useState<string | null>(null);
@@ -15,12 +37,19 @@ export default function DashboardOverview() {
   useEffect(() => {
     const publicClient = getPublicClient();
 
-    // Fetch total disclosures count from on-chain event logs (using deployment block to optimize search)
-    publicClient.getLogs({
-      address: CONTRACTS.stream as `0x${string}`,
-      event: parseAbiItem('event DisclosureGranted(uint256 indexed streamId, address indexed auditor, address indexed requestedBy, bytes32 snapshotHandle, uint256 timestamp)'),
-      fromBlock: 11251696n,
-    })
+    // Fetch total disclosures count from on-chain event logs (using chunking to stay under 1000 block RPC limit)
+    publicClient.getBlockNumber()
+      .then((currentBlock) => {
+        return fetchContractLogsInChunks(
+          publicClient,
+          {
+            address: CONTRACTS.stream as `0x${string}`,
+            event: parseAbiItem('event DisclosureGranted(uint256 indexed streamId, address indexed auditor, address indexed requestedBy, bytes32 snapshotHandle, uint256 timestamp)'),
+          },
+          11251696n,
+          currentBlock
+        );
+      })
       .then((logs) => {
         setDisclosureCount(logs.length.toString());
       })
